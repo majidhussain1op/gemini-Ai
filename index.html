@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapSite - Instant Website Screenshots</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and Base Styles */
+        :root {
+            --primary-color-light: #6D5BD0;
+            --secondary-color-light: #8A78E3;
+            --accent-color-light: #FF6B6B;
+            --background-color-light: #F4F7FC;
+            --text-color-light: #333;
+            --card-bg-light: #FFFFFF;
+            --border-color-light: #E0E0E0;
+            --gradient-start-light: #6D5BD0;
+            --gradient-end-light: #8A78E3;
+
+            --primary-color-dark: #7F5AF0;
+            --secondary-color-dark: #9D85F3;
+            --accent-color-dark: #FF7C7C;
+            --background-color-dark: #1A1A2E;
+            --text-color-dark: #E0E0E0;
+            --card-bg-dark: #24243E;
+            --border-color-dark: #3A3A5A;
+            --gradient-start-dark: #7F5AF0;
+            --gradient-end-dark: #2CB67D; /* Different gradient for dark mode */
+
+            /* Default to light mode */
+            --primary-color: var(--primary-color-light);
+            --secondary-color: var(--secondary-color-light);
+            --accent-color: var(--accent-color-light);
+            --background-color: var(--background-color-light);
+            --text-color: var(--text-color-light);
+            --card-bg: var(--card-bg-light);
+            --border-color: var(--border-color-light);
+            --gradient-start: var(--gradient-start-light);
+            --gradient-end: var(--gradient-end-light);
+        }
+
+        html.dark-mode {
+            --primary-color: var(--primary-color-dark);
+            --secondary-color: var(--secondary-color-dark);
+            --accent-color: var(--accent-color-dark);
+            --background-color: var(--background-color-dark);
+            --text-color: var(--text-color-dark);
+            --card-bg: var(--card-bg-dark);
+            --border-color: var(--border-color-dark);
+            --gradient-start: var(--gradient-start-dark);
+            --gradient-end: var(--gradient-end-dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            color: var(--primary-color);
+        }
+        h1 { font-size: 2.8rem; }
+        h2 { font-size: 2.2rem; }
+        h3 { font-size: 1.5rem; }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            color: var(--secondary-color);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            color: #fff;
+            border: none;
+            border-radius: 50px; /* Pill shape */
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(109, 91, 208, 0.4);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        .btn-secondary:hover {
+            background: var(--primary-color);
+            color: var(--card-bg);
+            box-shadow: 0 6px 20px rgba(109, 91, 208, 0.2);
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: background-color 0.3s ease;
+        }
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .navbar nav ul {
+            list-style: none;
+            display: flex;
+        }
+        .navbar nav ul li {
+            margin-left: 25px;
+        }
+        .navbar nav ul li a {
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .navbar nav ul li a:hover {
+            color: var(--secondary-color);
+        }
+        .theme-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-left: 20px;
+            transition: transform 0.3s ease;
+        }
+        .theme-toggle-btn:hover {
+            transform: scale(1.1) rotate(15deg);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 80px 0 60px;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            color: #fff;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.9;
+        }
+
+        /* Screenshot Tool Area */
+        .screenshot-tool {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: 0 auto;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .screenshot-tool h3 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .screenshot-tool input[type="url"] {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        .screenshot-tool input[type="url"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(109, 91, 208, 0.2);
+        }
+        .screenshot-tool .btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+        }
+        #screenshot-preview-area {
+            margin-top: 30px;
+            text-align: center;
+            min-height: 100px; /* Placeholder height */
+        }
+        #screenshot-preview-area img {
+            max-width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .loader {
+            border: 5px solid var(--border-color-light); /* Light grey */
+            border-top: 5px solid var(--primary-color); /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #status-message {
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        #status-message.error { color: var(--accent-color); }
+        #status-message.success { color: var(--gradient-end); }
+
+
+        /* Ad Placeholder */
+        .ad-placeholder {
+            width: 100%;
+            max-width: 728px; /* Common ad size */
+            height: 90px;    /* Common ad size */
+            background-color: var(--border-color);
+            border: 2px dashed var(--secondary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px auto;
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            text-align: center;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        /* Sections */
+        .section {
+            padding: 60px 0;
+        }
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            position: relative;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: var(--primary-color);
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+
+        /* Process Cards */
+        .process-cards {
+            display: flex;
+            justify-content: space-around;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .process-card {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            text-align: center;
+            flex-basis: calc(33.333% - 20px); /* Adjust for gap */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .process-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(109, 91, 208, 0.15);
+        }
+        .process-card .icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+        .process-card:hover .icon {
+            transform: scale(1.1) rotate(-5deg);
+        }
+        .process-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Features Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .feature-card {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(109, 91, 208, 0.1);
+        }
+        .feature-card .icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-top: 5px; /* Align with text better */
+            flex-shrink: 0;
+             width: 40px; /* Ensure icon area has fixed width */
+            text-align: center;
+        }
+        .feature-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+        .feature-card p {
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        /* Pricing Section */
+        .pricing-card {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            margin: 0 auto; /* Center the single pricing card */
+            border: 2px solid var(--primary-color); /* Highlight free tier */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .pricing-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 15px 40px rgba(109, 91, 208, 0.2);
+        }
+        .pricing-card h3 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+        .pricing-card .price {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        .pricing-card .price span {
+            font-size: 1rem;
+            font-weight: normal;
+            color: var(--text-color);
+        }
+        .pricing-card ul {
+            list-style: none;
+            margin: 25px 0;
+            text-align: left;
+        }
+        .pricing-card ul li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .pricing-card ul li i {
+            color: var(--gradient-end); /* Use a success-like color */
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        .pricing-card .btn {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        /* FAQ Section */
+        .faq-item {
+            background-color: var(--card-bg);
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: box-shadow 0.3s ease;
+        }
+        .faq-item:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .faq-question {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .faq-question i {
+            transition: transform 0.3s ease;
+        }
+        .faq-answer {
+            padding: 0 20px 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+        }
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+        .faq-item.active .faq-answer {
+            max-height: 300px; /* Adjust as needed for content */
+            /* padding: 0 20px 20px; /* Already applied above */
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--card-bg-dark); /* Darker footer for contrast in light mode */
+            color: var(--text-color-dark); /* Lighter text for dark footer */
+            padding: 40px 0 20px;
+            text-align: center;
+            margin-top: 60px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        html.dark-mode .footer {
+            background-color: #121220; /* Even darker for dark mode */
+        }
+        .footer .social-icons a {
+            color: var(--text-color-dark);
+            font-size: 1.5rem;
+            margin: 0 10px;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        .footer .social-icons a:hover {
+            color: var(--secondary-color-dark);
+            transform: translateY(-3px);
+        }
+        .footer p {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .hero h1 { font-size: 2.8rem; }
+            .hero p { font-size: 1.1rem; }
+            .process-card { flex-basis: calc(50% - 15px); }
+        }
+
+        @media (max-width: 768px) {
+            .navbar .container { flex-direction: column; }
+            .navbar nav ul { margin-top: 15px; padding-left: 0;}
+            .navbar nav ul li { margin: 0 10px; }
+            .theme-toggle-btn { position: absolute; top: 18px; right: 20px;}
+
+            .hero h1 { font-size: 2.2rem; }
+            .hero p { font-size: 1rem; }
+            .screenshot-tool { padding: 20px; }
+
+            .section-title { font-size: 2rem; }
+            .process-card { flex-basis: 100%; }
+            .features-grid { grid-template-columns: 1fr; }
+            
+            .ad-placeholder { height: auto; padding: 20px; font-size: 0.8rem;}
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <a href="#" class="logo">SnapSite ✨</a>
+            <nav>
+                <ul>
+                    <li><a href="#hero-tool">Tool</a></li>
+                    <li><a href="#process">How It Works</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                </ul>
+            </nav>
+            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark mode">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero-tool" class="hero">
+            <div class="container">
+                <h1>Capture Any Website, Instantly.</h1>
+                <p>SnapSite makes it effortless to grab a full-page screenshot of any webpage. Just enter the URL, and we'll handle the rest. Perfect for designers, developers, and marketers.</p>
+                
+                <div class="screenshot-tool">
+                    <h3>Let's Get Snapping!</h3>
+                    <input type="url" id="url-input" placeholder="Enter website URL (e.g., https://example.com)">
+                    <button id="capture-btn" class="btn">
+                        <i class="fas fa-camera"></i> Capture Screenshot
+                    </button>
+                    <div id="status-message"></div>
+                    <div class="loader" id="loader"></div>
+                    <div id="screenshot-preview-area">
+                        <!-- Screenshot preview will appear here -->
+                        <img id="screenshot-image" src="#" alt="Screenshot Preview" style="display:none;">
+                        <button id="download-btn" class="btn btn-secondary" style="display:none;">
+                            <i class="fas fa-download"></i> Download Screenshot
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="ad-placeholder">
+            Placeholder for Google Ad Banner (e.g., 728x90 Leaderboard) <br> Your Ad Here!
+        </div>
+
+        <section id="process" class="section">
+            <div class="container">
+                <h2 class="section-title">Simple 3-Step Process</h2>
+                <div class="process-cards">
+                    <div class="process-card">
+                        <span class="icon"><i class="fas fa-keyboard"></i></span>
+                        <h3>1. Enter URL</h3>
+                        <p>Paste the full web address of the site you want to capture.</p>
+                    </div>
+                    <div class="process-card">
+                        <span class="icon"><i class="fas fa-magic"></i></span>
+                        <h3>2. We Capture</h3>
+                        <p>Our smart tech visits the site and takes a high-quality, full-page screenshot.</p>
+                    </div>
+                    <div class="process-card">
+                        <span class="icon"><i class="fas fa-cloud-download-alt"></i></span>
+                        <h3>3. Download</h3>
+                        <p>Preview your screenshot and download it directly to your computer.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="section" style="background-color: var(--card-bg-light);">
+             <html.dark-mode> & #features { background-color: var(--card-bg-dark) !important; } </html.dark-mode>
+            <div class="container">
+                <h2 class="section-title">Packed With Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="icon"><i class="fas fa-expand-arrows-alt"></i></span>
+                        <div>
+                            <h3>Full-Page Capture</h3>
+                            <p>Don't just get what's visible. We scroll and capture the entire webpage, top to bottom.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="icon"><i class="fas fa-bolt"></i></span>
+                        <div>
+                            <h3>Lightning Fast</h3>
+                            <p>Our optimized process means you get your screenshots in seconds, not minutes.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="icon"><i class="fas fa-image"></i></span>
+                        <div>
+                            <h3>High Resolution</h3>
+                            <p>Screenshots are captured in high quality, perfect for presentations or archival.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="icon"><i class="fas fa-shield-alt"></i></span>
+                        <div>
+                            <h3>Secure & Private</h3>
+                            <p>We respect your privacy. URLs are processed securely and screenshots are yours alone.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="icon"><i class="fas fa-mobile-alt"></i></span>
+                        <div>
+                            <h3>Responsive Design</h3>
+                            <p>Use SnapSite on any device – desktop, tablet, or mobile. It looks great everywhere.</p>
+                        </div>
+                    </div>
+                     <div class="feature-card">
+                        <span class="icon"><i class="fas fa-adjust"></i></span>
+                        <div>
+                            <h3>Dark/Light Mode</h3>
+                            <p>Choose the interface theme that's easiest on your eyes, day or night.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="pricing" class="section">
+            <div class="container">
+                <h2 class="section-title">Simple & Transparent Pricing</h2>
+                <div class="pricing-card">
+                    <h3>Free Tier</h3>
+                    <div class="price">$0<span>/month</span></div>
+                    <p>Get started with all essential features, completely free.</p>
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> Unlimited Screenshots</li>
+                        <li><i class="fas fa-check-circle"></i> Full-Page Captures</li>
+                        <li><i class="fas fa-check-circle"></i> High-Quality PNG Downloads</li>
+                        <li><i class="fas fa-check-circle"></i> Secure Processing</li>
+                        <li><i class="fas fa-check-circle"></i> Community Support</li>
+                    </ul>
+                    <a href="#hero-tool" class="btn">Get Started For Free</a>
+                </div>
+            </div>
+        </section>
+
+        <div class="ad-placeholder" style="max-width: 300px; height: 250px;">
+            Placeholder for Google Ad Banner (e.g., 300x250 Medium Rectangle) <br> Your Ad Here!
+        </div>
+
+        <section id="faq" class="section">
+            <div class="container">
+                <h2 class="section-title">Frequently Asked Questions</h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            What kind of URLs can I use?
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>You can use any publicly accessible website URL. Make sure to include `http://` or `https://`. Local URLs (like `localhost` or file paths) will not work as our server needs to access the site.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            How long does it take to get a screenshot?
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Typically, it takes a few seconds. However, complex websites or slow-loading pages might take a bit longer, up to a minute.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            Is there a limit to how many screenshots I can take?
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Currently, our free service offers unlimited screenshots. We believe in providing value!</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                           What format are the screenshots downloaded in?
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Screenshots are provided in PNG (Portable Network Graphics) format, which offers good quality and supports transparency (though full-page screenshots typically don't have transparency).</p>
+                        </div>
+                    </div>
+                     <div class="faq-item">
+                        <div class="faq-question">
+                           Why does my screenshot look slightly different from my browser?
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Our tool uses a standardized browser engine (Chromium via Puppeteer) with a fixed viewport to render pages. Minor differences can occur due to:
+                                <ul>
+                                    <li>Fonts: If you have local fonts installed that the site uses, and our server doesn't, there might be slight text rendering differences.</li>
+                                    <li>Ad Blockers: Our tool doesn't use ad blockers. If you do, your view might differ.</li>
+                                    <li>Dynamic Content: Content loaded by JavaScript after a delay or based on user interaction might not always be captured if it appears very late. We try our best with `networkidle2` and a small delay.</li>
+                                    <li>Region-specific content: If a website shows different content based on IP location.</li>
+                                </ul>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="social-icons">
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+            <p>© <span id="current-year"></span> SnapSite. All rights reserved. Crafted with <i class="fas fa-heart" style="color: var(--accent-color-dark);"></i>.</p>
+            <p>Disclaimer: This is a demo application. Use responsibly.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlInput = document.getElementById('url-input');
+            const captureBtn = document.getElementById('capture-btn');
+            const loader = document.getElementById('loader');
+            const statusMessage = document.getElementById('status-message');
+            const screenshotImage = document.getElementById('screenshot-image');
+            const downloadBtn = document.getElementById('download-btn');
+            const previewArea = document.getElementById('screenshot-preview-area');
+
+            // Theme Toggle
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const currentTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-mode');
+                    themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+                } else {
+                    document.documentElement.classList.remove('dark-mode');
+                    themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+                }
+            }
+
+            // Initialize theme
+            if (currentTheme) {
+                applyTheme(currentTheme);
+            } else {
+                 // If no theme saved, use OS preference
+                if (prefersDark) {
+                    applyTheme('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    applyTheme('light');
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+
+
+            themeToggleBtn.addEventListener('click', () => {
+                let newTheme = document.documentElement.classList.contains('dark-mode') ? 'light' : 'dark';
+                applyTheme(newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+
+
+            captureBtn.addEventListener('click', async () => {
+                const url = urlInput.value.trim();
+                if (!url) {
+                    displayMessage('Please enter a URL.', 'error');
+                    return;
+                }
+
+                // Basic frontend URL validation (more robust on server)
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    displayMessage('Invalid URL. Please include http:// or https://', 'error');
+                    return;
+                }
+
+
+                loader.style.display = 'block';
+                captureBtn.disabled = true;
+                captureBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Capturing...';
+                statusMessage.textContent = '';
+                statusMessage.className = '';
+                screenshotImage.style.display = 'none';
+                downloadBtn.style.display = 'none';
+
+                try {
+                    const response = await fetch('/api/screenshot', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ url }),
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || `HTTP error! status: ${response.status}`);
+                    }
+                    
+                    displayMessage('Screenshot captured successfully!', 'success');
+                    screenshotImage.src = result.screenshotUrl + '?t=' + new Date().getTime(); // Cache buster
+                    screenshotImage.style.display = 'block';
+                    downloadBtn.dataset.downloadUrl = result.downloadUrl;
+                    downloadBtn.style.display = 'inline-block';
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    displayMessage(error.message || 'An unknown error occurred.', 'error');
+                    screenshotImage.style.display = 'none';
+                    downloadBtn.style.display = 'none';
+                } finally {
+                    loader.style.display = 'none';
+                    captureBtn.disabled = false;
+                    captureBtn.innerHTML = '<i class="fas fa-camera"></i> Capture Screenshot';
+                }
+            });
+
+            downloadBtn.addEventListener('click', () => {
+                const downloadUrl = downloadBtn.dataset.downloadUrl;
+                if (downloadUrl) {
+                    // Create a temporary link to trigger download
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.setAttribute('download', ''); // This ensures download
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+
+            function displayMessage(message, type = 'info') {
+                statusMessage.textContent = message;
+                statusMessage.className = type; // 'error' or 'success'
+            }
+
+            // FAQ Accordion
+            const faqItems = document.querySelectorAll('.faq-item');
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
+                question.addEventListener('click', () => {
+                    // Close other active items
+                    faqItems.forEach(otherItem => {
+                        if (otherItem !== item && otherItem.classList.contains('active')) {
+                            otherItem.classList.remove('active');
+                        }
+                    });
+                    // Toggle current item
+                    item.classList.toggle('active');
+                });
+            });
+
+            // Update current year in footer
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+
+            // Smooth scroll for nav links
+            document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if(targetElement) {
+                        // Calculate offset for sticky navbar
+                        const navbarHeight = document.querySelector('.navbar').offsetHeight;
+                        const elementPosition = targetElement.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
+                        
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: "smooth"
+                        });
+                    }
+                });
+            });
+
+            // Special styling for the features section background in dark mode
+            // This is a bit hacky due to inline CSS priority
+            const featuresSection = document.getElementById('features');
+            const observer = new MutationObserver(mutations => {
+                mutations.forEach(mutation => {
+                    if (mutation.attributeName === 'class') {
+                        if (document.documentElement.classList.contains('dark-mode')) {
+                            featuresSection.style.backgroundColor = 'var(--card-bg-dark)';
+                        } else {
+                            featuresSection.style.backgroundColor = 'var(--card-bg-light)';
+                        }
+                    }
+                });
+            });
+            observer.observe(document.documentElement, { attributes: true });
+            // Initial set
+            if (document.documentElement.classList.contains('dark-mode')) {
+                featuresSection.style.backgroundColor = 'var(--card-bg-dark)';
+            } else {
+                featuresSection.style.backgroundColor = 'var(--card-bg-light)';
+            }
+
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "gemini-web-app",
+  "version": "1.0.0",
+  "description": "SnapSite is a Node.js web application that allows users to take screenshots of any website and download them. It features a modern SaaS-style interface with dark mode, micro-animations, and various informational sections.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.1.0",
+    "puppeteer": "^24.10.0"
+  }
+}
